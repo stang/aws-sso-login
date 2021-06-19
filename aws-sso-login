@@ -1,0 +1,27 @@
+#!/bin/bash
+set -eu
+
+#
+# This script:
+#   - runs the 'aws sso login'
+#   - extracts the short-lived access keys from the AWS CLI v2 format and save them in ~/.aws/credentials
+#
+
+AWS2_CLI_CREDENTIALS_CACHE_DIR="${HOME}/.aws/cli/cache"
+AWS_SSO_DEFAULT_PROFILE=${AWS_SSO_DEFAULT_PROFILE:-default}
+AWS_PROFILE="${1:-${AWS_SSO_DEFAULT_PROFILE}}"
+
+# #TODO: 'no-op' when credentials are already valid
+aws sso login --profile "${AWS_PROFILE}"
+
+# the cli/cache/*.json file seem to be created only after we make an API call
+aws sts get-caller-identity  --profile "${AWS_PROFILE}" &>/dev/null
+
+# identify where the short-lived credentials are stored
+# #FIXME: for now, we assume that the latest file created is THE one. It works but that feels flimsy.
+AWS2_CLI_CREDENTIALS=$(find "${AWS2_CLI_CREDENTIALS_CACHE_DIR}/" -type f | head -n1)
+
+# re-inject the short-lived credentials within ~/.aws/credentials
+aws configure set --profile "${AWS_PROFILE}" aws_access_key_id "$(jq -r '.Credentials.AccessKeyId' <"${AWS2_CLI_CREDENTIALS}")"
+aws configure set --profile "${AWS_PROFILE}" aws_secret_access_key "$(jq -r '.Credentials.SecretAccessKey' <"${AWS2_CLI_CREDENTIALS}")"
+aws configure set --profile "${AWS_PROFILE}" aws_session_token "$(jq -r '.Credentials.SessionToken' <"${AWS2_CLI_CREDENTIALS}")"
