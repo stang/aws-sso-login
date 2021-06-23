@@ -19,7 +19,9 @@ aws sts get-caller-identity  --profile "${AWS_PROFILE}" &>/dev/null
 
 # identify where the short-lived credentials are stored
 # #FIXME: for now, we assume that the latest file created is THE one. It works but that feels flimsy.
-AWS2_CLI_CREDENTIALS=$(find "${AWS2_CLI_CREDENTIALS_CACHE_DIR}/" -type f | head -n1)
+# shellcheck disable=SC2012
+AWS2_CLI_CREDENTIALS_FILE="$(ls -t1 "${AWS2_CLI_CREDENTIALS_CACHE_DIR}/" | head -n1)"
+AWS2_CLI_CREDENTIALS="${AWS2_CLI_CREDENTIALS_CACHE_DIR}/${AWS2_CLI_CREDENTIALS_FILE}"
 
 # re-inject the short-lived credentials within ~/.aws/credentials
 aws configure set --profile "${AWS_PROFILE}" aws_access_key_id "$(jq -r '.Credentials.AccessKeyId' <"${AWS2_CLI_CREDENTIALS}")"
