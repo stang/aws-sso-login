@@ -13,6 +13,13 @@ AWS_SSO_DEFAULT_PROFILE=${AWS_SSO_DEFAULT_PROFILE:-default}
 AWS_SSO_DEFAULT_PROFILE=${AWS_PROFILE:-$AWS_SSO_DEFAULT_PROFILE}
 AWS_PROFILE="${1:-${AWS_SSO_DEFAULT_PROFILE}}"
 
+# #FIXME: since 'aws sso login' does not update the cache files when they're still valid, there were an edge case
+# where running 'aws-sso-login' multiple times on the same account, with an intermediary account in between would
+# not work correctly (ie: because we fetch the cached credentials based on the mtime of the .aws/cli/cache files)
+# As a workaround, I'm deleting all those cached files before running 'aws sso login' so we ensure that there will
+# always be a single file in .aws/cli/cache, and it always match the current profile we're trying to login as.
+rm -f ${AWS2_CLI_CREDENTIALS_CACHE_DIR}/*.json
+
 # #TODO: 'no-op' when credentials are already valid
 echo "Using AWS profile '${AWS_PROFILE}' to perform SSO login"
 aws sso login --profile "${AWS_PROFILE}"
