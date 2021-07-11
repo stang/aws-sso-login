@@ -37,16 +37,16 @@ sudo chmod +x "${INSTALL_DIR}/aws-sso-login"
 ## Usage
 
 1. [configure aws sso](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html#sso-configure-profile-auto)
-2. use `aws-sso-login [profile]` instead of `aws sso login`
+2. use `aws-sso-login [--profile profile]` instead of `aws sso login`
 
 ## Support multiple AWS Profile
 
 `aws-sso-login` will use the AWS profile set as following (first match takes precedences):
 
-- $1 (ie: first optional argument of the command)
-- AWS_PROFILE environment variable
-- AWS_SSO_DEFAULT_PROFILE environment variable
-- use 'default'
+- passed via the `--profile` arg
+- `AWS_PROFILE` environment variable
+- `AWS_SSO_DEFAULT_PROFILE` environment variable
+- use `default`
 
 ## Known Issues
 
