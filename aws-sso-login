@@ -8,10 +8,18 @@ set -eu
 #
 
 AWS2_CLI_CREDENTIALS_CACHE_DIR="${HOME}/.aws/cli/cache"
+
 AWS_SSO_DEFAULT_PROFILE=${AWS_SSO_DEFAULT_PROFILE:-default}
-# if 'AWS_PROFILE' is set: use it except if $1 is provided
-AWS_SSO_DEFAULT_PROFILE=${AWS_PROFILE:-$AWS_SSO_DEFAULT_PROFILE}
-AWS_PROFILE="${1:-${AWS_SSO_DEFAULT_PROFILE}}"
+# support '--profile' arg as the 'aws' cli does
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --profile) AWS_PROFILE_FROM_CLI="${2?:AWS_PROFILE must be provided with $1 option}"; break; ;;
+    *) shift;; # we're only interested by the inventory
+  esac
+done
+
+# use profile set from either the CLI args, the AWS_PROFILE environment variable or the AWS_SSO_DEFAULT_PROFILE environment variable
+AWS_PROFILE="${AWS_PROFILE_FROM_CLI:-${AWS_PROFILE:-${AWS_SSO_DEFAULT_PROFILE}}}"
 
 # #FIXME: since 'aws sso login' does not update the cache files when they're still valid, there were an edge case
 # where running 'aws-sso-login' multiple times on the same account, with an intermediary account in between would
